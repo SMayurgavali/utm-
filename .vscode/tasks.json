@@ -1,0 +1,41 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Start UTM Cloud Hub Server",
+      "type": "shell",
+      "command": "python run.py --port 8000",
+      "problemMatcher": [],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "Run Automated Tests",
+      "type": "shell",
+      "command": "python tests/test_engine.py",
+      "problemMatcher": [],
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "Open Dashboard in Browser",
+      "type": "shell",
+      "command": "Start-Process 'http://127.0.0.1:8000/'",
+      "problemMatcher": []
+    },
+    {
+      "label": "Run DB & History Validation",
+      "type": "shell",
+      "command": "python -m pytest tests/test_db_and_history.py",
+      "problemMatcher": [],
+      "group": {
+        "kind": "test",
+        "isDefault": false
+      }
+    }
+  ]
+}

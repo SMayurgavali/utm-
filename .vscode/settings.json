@@ -1,0 +1,11 @@
+{
+  "python.analysis.extraPaths": [
+    "${workspaceFolder}"
+  ],
+  "python.autoComplete.extraPaths": [
+    "${workspaceFolder}"
+  ],
+  "files.autoSave": "afterDelay",
+  "editor.formatOnSave": true,
+  "terminal.integrated.defaultProfile.windows": "PowerShell"
+}

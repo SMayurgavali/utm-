@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI-Powered UTM Cloud Hub — Hardware-to-Software Retrofitting Platform</title>
+  <meta name="description" content="Universal Testing Machine (UTM) telemetry, stress-strain calculations, automated compliance review, and test report generation.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body class="light-theme">
+  <div id="loginOverlay" class="auth-overlay">
+    <div class="auth-panel">
+      <div class="auth-badge">UTM CLOUD HUB</div>
+      <h2>Client Sign In</h2>
+      <p>Secure operator access to the testing workspace.</p>
+      <form id="loginForm" class="auth-form">
+        <label for="loginUsername">Email</label>
+        <input id="loginUsername" name="username" type="email" autocomplete="username" required>
+
+        <label for="loginPassword">Password</label>
+        <input id="loginPassword" name="password" type="password" autocomplete="current-password" required>
+
+        <button type="submit" class="auth-submit">ACCESS DASHBOARD</button>
+      </form>
+      <div id="loginStatus" class="auth-status"></div>
+    </div>
+  </div>
+
+  <!-- Top Application Appbar -->
+  <header class="app-header">
+    <div class="brand-cluster">
+      <div class="brand-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+        </svg>
+      </div>
+      <div>
+        <h1 class="brand-title">AI-POWERED UTM CLOUD HUB</h1>
+        <p class="brand-subtitle">HARDWARE-TO-SOFTWARE RETROFITTING PLATFORM • 9600 8-N-1 FTDI</p>
+      </div>
+    </div>
+
+    <!-- Top Status Bar Badges -->
+    <div class="system-status-ribbon">
+      <div class="status-pill connected" id="hardwarePill" title="FTDI Chipset Hardware Binding">
+        <span class="indicator-dot"></span>
+        <span class="pill-label">HARDWARE: <strong id="hardwarePortText">NOT CONNECTED</strong></span>
+      </div>
+      <div class="status-pill isolated" title="Optoelectronic Isolation Bridge">
+        <span class="shield-icon">⚡</span>
+        <span class="pill-label">ISOLATION: <strong>NOT VERIFIED</strong></span>
+      </div>
+      <div class="status-pill ws-connected" id="cloudPill" title="Cloud Telemetry Stream">
+        <span class="indicator-dot"></span>
+        <span class="pill-label">CLOUD STREAM: <strong id="wsStatusText">SYNCED (25Hz)</strong></span>
+      </div>
+      <div class="test-state-badge idle" id="testStateBadge">
+        STATE: IDLE
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Viewport Layout: Optimized Three-Panel Desktop Architecture -->
+  <main class="three-panel-viewport">
+
+    <!-- PANEL 1: MODAL SETUP & OPERATIONAL CONTROLS (LEFT) -->
+    <aside class="panel panel-left" id="panelControls">
+      <div class="panel-header">
+        <span class="panel-icon">⚙️</span>
+        <h2>1. Machine Setup & Controls</h2>
+      </div>
+
+      <!-- High-Priority Tactile Interface Control Click Panels -->
+      <section class="control-actions-cluster">
+        <h3 class="section-tag">OPERATIONAL ACTION TRIGGERS</h3>
+        <div class="action-grid">
+          <button id="btnTare" class="btn btn-tactile btn-tare" title="Zero active load cell offset">
+            <span class="btn-icon">⚖️</span>
+            <span class="btn-text">TARE LOAD</span>
+          </button>
+          <button id="btnStart" class="btn btn-tactile btn-start" title="Initialize specimen tensile test">
+            <span class="btn-icon">▶</span>
+            <span class="btn-text">START TEST</span>
+          </button>
+          <button id="btnStop" class="btn btn-tactile btn-stop" title="Halt tracking sequence">
+            <span class="btn-icon">⏹</span>
+            <span class="btn-text">STOP TEST</span>
+          </button>
+          <button id="btnClose" class="btn btn-tactile btn-close-app" title="Reset workspace session">
+            <span class="btn-icon">✕</span>
+            <span class="btn-text">RESET TEST</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- Hardware Source & Communication Parameters -->
+      <section class="form-section">
+        <h3 class="section-tag">HARDWARE PORT & LINK CONFIG</h3>
+        <div class="field-row">
+          <label for="hardwareSource">Data Source:</label>
+          <select id="hardwareSource" class="select-field">
+            <option value="virtual" selected>Virtual test simulator</option>
+            <option value="serial">Physical serial telemetry (read-only; no motion control)</option>
+          </select>
+        </div>
+        <p id="hardwareSafetyNote" class="helper-text hardware-safety-note" hidden>Read-only data path. No valve, servo, crosshead, or emergency-stop commands are available.</p>
+
+        <div class="field-row" id="virtualMaterialRow">
+          <label for="virtualMaterial">Virtual Coupon Material:</label>
+          <select id="virtualMaterial" class="select-field">
+            <option value="" disabled selected>Select material grade</option>
+            <option value="IS_1786_FE500">IS 1786 Grade Fe 500 (simulator profile)</option>
+            <option value="IS_1786_FE415">IS 1786 Grade Fe 415 Rebar (Su ~530 MPa)</option>
+            <option value="ASTM_A36">ASTM A36 Structural Mild Steel (Su ~460 MPa)</option>
+            <option value="ALUMINUM_6061_T6">ASTM B221 Aluminum 6061-T6 (Su ~315 MPa)</option>
+          </select>
+        </div>
+
+        <div class="field-row">
+          <label for="controlMode">Simulator control target:</label>
+          <select id="controlMode" class="select-field">
+            <option value="crosshead_speed">Crosshead speed (mm/min)</option>
+            <option value="load_rate">Load rate (kN/min, approximate)</option>
+          </select>
+        </div>
+        <div class="field-grid-2">
+          <div class="field-col" id="crossheadSpeedField">
+            <label for="crossheadSpeed">Speed target:</label>
+            <input type="number" id="crossheadSpeed" class="input-field" min="0.1" max="100" step="0.1" value="12">
+          </div>
+          <div class="field-col" id="loadRateField" hidden>
+            <label for="loadRateTarget">Load-rate target:</label>
+            <input type="number" id="loadRateTarget" class="input-field" min="0.1" max="100" step="0.1" value="20">
+            <select id="loadRateUnit" class="select-field" aria-label="Load rate unit">
+              <option value="kn_min">kN/min</option>
+              <option value="n_sec">N/sec</option>
+            </select>
+          </div>
+        </div>
+        <div class="field-grid-2">
+          <div class="field-col">
+            <label for="maxLoadLimit">Software load alert limit:</label>
+            <input type="number" id="maxLoadLimit" class="input-field" min="0.1" step="any" required>
+            <small class="helper-text">Alert only. Does not stop machine hardware.</small>
+          </div>
+          <div class="field-col">
+            <label for="maxTravelLimit">Software travel alert limit:</label>
+            <input type="number" id="maxTravelLimit" class="input-field" min="0.001" step="any" required>
+            <small class="helper-text">Alert only. Does not stop machine hardware.</small>
+          </div>
+        </div>
+
+        <div class="field-row">
+          <label for="pollingFreq">Polling Rate Target:</label>
+          <div class="slider-group">
+            <input type="range" id="pollingFreq" min="10" max="50" step="5" value="25" class="range-slider">
+            <span id="pollingFreqVal" class="slider-badge">25 Hz</span>
+          </div>
+        </div>
+
+        <div class="hardware-specs-box">
+          <div class="spec-item"><span>Baud Target:</span> <strong>9600 bps</strong></div>
+          <div class="spec-item"><span>Data Bits:</span> <strong>8 Bits</strong></div>
+          <div class="spec-item"><span>Parity / Stop:</span> <strong>None / 1 Stop Bit (9600 8-N-1)</strong></div>
+          <div class="spec-item"><span>Timeout Ceiling:</span> <strong>1.0 s</strong></div>
+        </div>
+      </section>
+
+      <!-- Specimen Profiling Parameters Configuration -->
+      <section class="form-section">
+        <h3 class="section-tag">SPECIMEN MATH ENGINE INPUTS</h3>
+        <div class="field-row">
+          <label for="sampleId">Sample ID:</label>
+          <input type="text" id="sampleId" class="input-field" autocomplete="off">
+        </div>
+        <div class="field-row">
+          <label for="companyName">Laboratory / company:</label>
+          <input type="text" id="companyName" class="input-field" autocomplete="organization">
+        </div>
+        <div class="field-row">
+          <label for="systemSerialNumber">Machine serial number:</label>
+          <input type="text" id="systemSerialNumber" class="input-field" autocomplete="off">
+        </div>
+        <div class="field-grid-2">
+          <div class="field-col">
+            <label for="operatorName">Tested by:</label>
+            <input type="text" id="operatorName" class="input-field" autocomplete="name">
+          </div>
+          <div class="field-col">
+            <label for="inspectorName">Inspected by:</label>
+            <input type="text" id="inspectorName" class="input-field">
+          </div>
+        </div>
+        <div class="field-row">
+          <label for="witnessName">Witnessed by:</label>
+          <input type="text" id="witnessName" class="input-field">
+        </div>
+        <div class="field-row">
+          <label for="testMode">Test mode:</label>
+          <select id="testMode" class="select-field">
+            <option value="tension">Tension</option>
+            <option value="compression">Compression</option>
+          </select>
+        </div>
+
+        <div class="field-row">
+          <label for="geometryType">Specimen geometry:</label>
+          <select id="geometryType" class="select-field">
+            <option value="" disabled selected>Select geometry</option>
+            <option value="round">Round (diameter)</option>
+            <option value="flat">Flat (width x thickness)</option>
+          </select>
+        </div>
+        <div class="field-grid-2">
+          <div class="field-col">
+            <label for="specimenWidth">Width / diameter (mm):</label>
+            <input type="number" id="specimenWidth" class="input-field" min="0.000001" step="any">
+          </div>
+          <div class="field-col" id="specimenThicknessField" hidden>
+            <label for="specimenThickness">Thickness (mm):</label>
+            <input type="number" id="specimenThickness" class="input-field" min="0.000001" step="any">
+          </div>
+        </div>
+
+        <div class="field-row">
+          <label for="standardSelect">Compliance Standard:</label>
+          <select id="standardSelect" class="select-field">
+            <option value="" disabled selected>Select standard</option>
+            <option value="IS 1786">IS 1786 (High Strength Deformed Steel)</option>
+            <option value="IS 1608">IS 1608 / ISO 6892-1 (Metallic Tensile)</option>
+            <option value="ASTM E8">ASTM E8 / E8M (Metallic Materials)</option>
+          </select>
+        </div>
+
+        <div class="field-grid-2">
+          <div class="field-col">
+            <label for="areaA0">Cross-Section Area (A₀):</label>
+            <div class="unit-input-wrapper">
+              <input type="number" id="areaA0" class="input-field" readonly required>
+              <span class="unit-tag">mm²</span>
+            </div>
+            <small class="helper-text">Calculated from the dimensions above.</small>
+          </div>
+          <div class="field-col">
+            <label for="lengthL0">Gauge Length (L₀):</label>
+            <div class="unit-input-wrapper">
+              <input type="number" id="lengthL0" class="input-field" min="0.000001" step="any" required>
+              <span class="unit-tag">mm</span>
+            </div>
+            <small class="helper-text">Enter measured gauge length.</small>
+          </div>
+        </div>
+      </section>
+
+      <!-- Superimpose Historical Matrix -->
+      <section class="form-section">
+        <h3 class="section-tag">SUPERIMPOSE HISTORICAL MATRIX</h3>
+        <div class="field-row">
+          <label for="historicalSelect">Overlay Historical Run:</label>
+          <select id="historicalSelect" class="select-field">
+            <option value="none" selected>-- No Overlay Track --</option>
+          </select>
+        </div>
+        <div class="checkbox-row">
+          <input type="checkbox" id="toggleHistorical">
+          <label for="toggleHistorical">Superimpose historical ghost curve on active screen</label>
+        </div>
+      </section>
+
+      <section class="form-section">
+        <h3 class="section-tag">SAVED TEST RUNS</h3>
+        <div class="field-row">
+          <label for="testRunSearch">Find by sample or material:</label>
+          <input id="testRunSearch" type="search" class="input-field" autocomplete="off">
+        </div>
+        <div class="field-row">
+          <label for="testRunList">Date / sample / status:</label>
+          <select id="testRunList" class="select-field" multiple size="5" aria-label="Saved test runs"></select>
+        </div>
+        <div class="action-grid">
+          <button id="btnRefreshRuns" class="toolbar-btn" type="button">Refresh</button>
+          <button id="btnLoadRun" class="toolbar-btn" type="button">Load</button>
+          <button id="btnCompareRuns" class="toolbar-btn" type="button">Compare (max 3)</button>
+          <button id="btnReviewRun" class="toolbar-btn" type="button">Re-analyze</button>
+          <button id="btnDeleteRun" class="toolbar-btn" type="button">Delete</button>
+        </div>
+      </section>
+
+      <!-- Multi-Format Export Pipelines Hub -->
+      <section class="form-section export-hub">
+        <h3 class="section-tag">REPORT & EXPORT PIPELINES</h3>
+        <div class="export-button-grid">
+          <button id="btnDownloadPdf" class="btn btn-export btn-pdf" title="Generate test report PDF">
+            <span class="btn-icon">📄</span>
+            <span>TEST REPORT PDF</span>
+          </button>
+          <button id="btnDownloadXlsx" class="btn btn-export" title="Export Excel .xlsx workbook">
+            <span class="btn-icon">📊</span>
+            <span>EXCEL (.XLSX)</span>
+          </button>
+          <button id="btnDownloadCsv" class="btn btn-export" title="Export Lightweight CSV">
+            <span class="btn-icon">📝</span>
+            <span>CSV DATA</span>
+          </button>
+          <button id="btnDownloadXyt" class="btn btn-export" title="Export Raw XYT Time-Series table">
+            <span class="btn-icon">📈</span>
+            <span>RAW XYT</span>
+          </button>
+        </div>
+      </section>
+    </aside>
+
+    <!-- PANEL 2: MAIN VISUALIZATION CURVES (CENTER) -->
+    <section class="panel panel-center" id="panelVisualization">
+      <div class="panel-header chart-panel-header">
+        <div class="chart-header-left">
+          <span class="panel-icon">📉</span>
+          <h2>2. Dynamic Visualization Matrix</h2>
+        </div>
+
+        <!-- Graph Profile Configuration Matrix: 4 Instant Chart Modes -->
+        <nav class="chart-mode-tabs" role="tablist">
+          <button class="mode-tab active" data-mode="1" id="tabMode1">
+            <span class="tab-code">MODE 1</span>
+            <span class="tab-name">Load vs Disp (kN - mm)</span>
+          </button>
+          <button class="mode-tab" data-mode="2" id="tabMode2">
+            <span class="tab-code">MODE 2</span>
+            <span class="tab-name">Stress vs Disp (MPa - mm)</span>
+          </button>
+          <button class="mode-tab" data-mode="3" id="tabMode3">
+            <span class="tab-code">MODE 3</span>
+            <span class="tab-name">Stress vs Strain (MPa - ΔL/L₀)</span>
+          </button>
+          <button class="mode-tab" data-mode="4" id="tabMode4">
+            <span class="tab-code">MODE 4</span>
+            <span class="tab-name">Load vs Time (kN - s)</span>
+          </button>
+        </nav>
+      </div>
+
+      <!-- Chart Toolbar: Visual Adjustments & Coordinates Display -->
+      <div class="chart-toolbar">
+        <div class="chart-controls-left">
+          <button id="btnToggleGrid" class="toolbar-btn active" title="Toggle Grid Lines">
+            <span>⊞</span> Grid Lines: ON
+          </button>
+          <button id="btnToggleAutoScale" class="toolbar-btn active" title="Toggle Auto-Scale Axis">
+            <span>⤢</span> Auto-Scale: ON
+          </button>
+          <button id="btnZoomIn" class="toolbar-btn" title="Localized Zoom In">
+            <span>🔍+</span> Zoom In
+          </button>
+          <button id="btnZoomOut" class="toolbar-btn" title="Localized Zoom Out">
+            <span>🔍-</span> Zoom Out
+          </button>
+          <button id="btnResetZoom" class="toolbar-btn" title="Reset Zoom Window">
+            <span>↺</span> Reset View
+          </button>
+          <button id="btnFreezeScreen" class="toolbar-btn" title="Freeze live display without stopping acquisition" aria-pressed="false">
+            <span>Ⅱ</span> Freeze Screen
+          </button>
+        </div>
+
+        <details class="axis-limits">
+          <summary>Axis bounds</summary>
+          <div class="axis-limit-fields">
+            <label>X min<input id="axisMinX" type="number" step="any"></label>
+            <label>X max<input id="axisMaxX" type="number" step="any"></label>
+            <label>Y min<input id="axisMinY" type="number" step="any"></label>
+            <label>Y max<input id="axisMaxY" type="number" step="any"></label>
+            <button id="btnApplyAxisLimits" class="toolbar-btn" type="button">Apply</button>
+          </div>
+        </details>
+
+        <!-- Interactive Point Tracing Tool Status -->
+        <div class="cursor-crosshair-status" id="cursorCoordBox">
+          <span class="crosshair-icon">✛</span>
+          <span class="coord-label">POINT TRACER:</span>
+          <span class="coord-values" id="coordReadout">X: -- | Y: --</span>
+        </div>
+      </div>
+
+      <!-- Chart Viewport Canvas Container -->
+      <div class="canvas-wrapper" id="canvasWrapper">
+        <canvas id="utmChartCanvas"></canvas>
+        <canvas id="overlayCanvas"></canvas>
+        
+        <!-- Interactive Point Tracing Tool Floating Crosshair & Tooltip -->
+        <div id="crosshairTooltip" class="crosshair-tooltip hidden">
+          <div class="tooltip-header" id="tooltipHeader">COUPON TELEMETRY POINT</div>
+          <div class="tooltip-row">
+            <span id="tooltipXLabel">X:</span>
+            <strong id="tooltipXVal">0.00</strong>
+          </div>
+          <div class="tooltip-row">
+            <span id="tooltipYLabel">Y:</span>
+            <strong id="tooltipYVal">0.00</strong>
+          </div>
+          <div class="tooltip-row secondary" id="tooltipSecRow">
+            <span>Stress:</span>
+            <strong id="tooltipSecVal">0.0 MPa</strong>
+          </div>
+        </div>
+
+        <!-- Automated Fracture Alert Overlay Banner -->
+        <div id="fractureBanner" class="fracture-alert-banner hidden">
+          <div class="fracture-icon">⚠️</div>
+          <div class="fracture-content">
+            <div class="fracture-title">AUTOMATED FRACTURE DETECTED</div>
+            <div class="fracture-desc">Active force dropped to 0.0 N after established active history sequence exceeding 5 frames. Tracking locked.</div>
+          </div>
+          <div class="fracture-tag">FRACTURE HALT</div>
+        </div>
+      </div>
+
+      <!-- Live Legend & Curve Status Footer -->
+      <div class="chart-legend-bar">
+        <div class="legend-item active-curve">
+          <span class="legend-line solid-blue"></span>
+          <span class="legend-text" id="activeCurveLegend">Active Specimen Curve</span>
+        </div>
+        <div class="legend-item ghost-curve" id="ghostLegendItem" style="display: none;">
+          <span class="legend-line dashed-amber"></span>
+          <span class="legend-text" id="ghostCurveLegend">Historical Overlay: Disabled</span>
+        </div>
+        <div class="legend-item peak-point">
+          <span class="legend-dot red-dot"></span>
+          <span class="legend-text">Peak Load (F_max) Lock</span>
+        </div>
+        <div class="legend-item fracture-point">
+          <span class="legend-cross">✕</span>
+          <span class="legend-text">Zero-Force Fracture Point</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- PANEL 3: DIGITAL TELEMETRY & AI COMPLIANCE (RIGHT) -->
+    <aside class="panel panel-right" id="panelTelemetry">
+      <div class="panel-header">
+        <span class="panel-icon">📊</span>
+        <h2>3. Live Telemetry & Engineering Readouts</h2>
+      </div>
+
+      <!-- Oversized Digital Telemetry Readouts -->
+      <section class="telemetry-readout-cluster">
+        <!-- Active System Load (kN) -->
+        <div class="telemetry-card primary-card">
+          <div class="card-top">
+            <span class="card-label">ACTIVE SYSTEM LOAD</span>
+            <span class="card-indicator live-pulse"></span>
+          </div>
+          <div class="digital-display-row">
+            <span class="digital-value" id="valLoadKn">0.000</span>
+            <span class="digital-unit">kN</span>
+          </div>
+          <div class="sub-digital-row">
+            <span>Force (N):</span>
+            <strong id="valLoadN">0.0 N</strong>
+          </div>
+        </div>
+
+        <!-- Active Displacement Metric (mm) -->
+        <div class="telemetry-card secondary-card">
+          <div class="card-top">
+            <span class="card-label">ACTIVE DISPLACEMENT</span>
+            <span class="card-badge">EXT / COMP</span>
+          </div>
+          <div class="digital-display-row">
+            <span class="digital-value" id="valDispMm">0.0000</span>
+            <span class="digital-unit">mm</span>
+          </div>
+          <div class="sub-digital-row">
+            <span>Displacement Rate:</span>
+            <strong id="valDispRate">0.000 mm/min</strong>
+          </div>
+        </div>
+      </section>
+
+      <!-- Visual Peak Load Field Panel (F_max, D_peak, S_u) -->
+      <section class="peak-load-panel">
+        <div class="panel-sub-header">
+          <span class="star-icon">★</span>
+          <h3>VISUAL PEAK LOAD RETENTION FIELD</h3>
+        </div>
+        <div class="peak-metrics-grid">
+          <div class="peak-metric-cell">
+            <span class="cell-label">PEAK FORCE (F_max)</span>
+            <div class="cell-num-wrapper">
+              <span class="cell-val highlight-red" id="valFmaxKn">0.000</span>
+              <span class="cell-unit">kN</span>
+            </div>
+            <small class="cell-sub" id="valFmaxN">0 N</small>
+          </div>
+          <div class="peak-metric-cell">
+            <span class="cell-label">PEAK DISP (D_peak)</span>
+            <div class="cell-num-wrapper">
+              <span class="cell-val" id="valDpeakMm">0.0000</span>
+              <span class="cell-unit">mm</span>
+            </div>
+            <small class="cell-sub">Index locked</small>
+          </div>
+        </div>
+        <div class="peak-metrics-grid analysis-metrics-grid">
+          <div class="peak-metric-cell">
+            <span class="cell-label">Estimated Young's Modulus</span>
+            <strong class="cell-value" id="valYoungsModulus">-- GPa</strong>
+          </div>
+          <div class="peak-metric-cell">
+            <span class="cell-label">Estimated 0.2% Proof Stress</span>
+            <strong class="cell-value" id="valProofStress">-- MPa</strong>
+          </div>
+          <div class="peak-metric-cell">
+            <span class="cell-label">Measured End Elongation</span>
+            <strong class="cell-value" id="valElongation">-- %</strong>
+          </div>
+        </div>
+        <div class="ultimate-strength-banner">
+          <span class="uts-title">ULTIMATE STRENGTH (S_u = F_max / A₀):</span>
+          <div class="uts-val-wrapper">
+            <span class="uts-val" id="valSuMpa">0.00</span>
+            <span class="uts-unit">MPa (N/mm²)</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Live Pacing Gauge Component -->
+      <section class="pacing-gauge-section">
+        <div class="panel-sub-header">
+          <span class="speedo-icon">⚡</span>
+          <h3>LIVE SYSTEM PACING GAUGE</h3>
+        </div>
+        <div class="pacing-gauge-wrapper">
+          <div class="pacing-bar-container">
+            <div class="pacing-bar-fill" id="pacingFill" style="width: 0%;"></div>
+            <div class="pacing-target-marker" style="left: 60%;" title="Target Standard Rate"></div>
+          </div>
+          <div class="pacing-readout-row">
+            <span class="pacing-badge" id="pacingText">Load Rate: 0.000 kN/min</span>
+            <span class="pacing-stability" id="pacingStatus">IN SPEC (10-30 kN/min)</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Dynamic Engineering Stress & Strain HUD -->
+      <section class="stress-strain-hud">
+        <div class="hud-item">
+          <span class="hud-label">ENGINEERING STRESS (σ = F/A₀)</span>
+          <span class="hud-value" id="valStressMpa">0.00 MPa</span>
+        </div>
+        <div class="hud-item">
+          <span class="hud-label">ENGINEERING STRAIN (ε = ΔL/L₀)</span>
+          <span class="hud-value" id="valStrainPct">0.000 %</span>
+        </div>
+        <div class="hud-item">
+          <span class="hud-label">ELAPSED TIME (T_s)</span>
+          <span class="hud-value" id="valTimeSec">0.00 s</span>
+        </div>
+      </section>
+
+      <!-- AI Automated Compliance Reviewer Preview Card -->
+      <section class="ai-compliance-preview-card">
+        <div class="ai-card-header">
+          <div class="ai-chip">AI COMPLIANCE REVIEWER</div>
+          <div class="ai-audit-badge" id="aiAuditBadge">PENDING</div>
+        </div>
+        <div class="ai-std-label" id="aiStdTitle">Validating against IS 1786 / ASTM E8...</div>
+        
+        <!-- Checklist items -->
+        <ul class="compliance-checklist" id="complianceChecklist">
+          <li class="chk-item">
+            <span class="chk-dot">●</span>
+            <span class="chk-text">0.2% Proof / Yield Stress: Checking...</span>
+          </li>
+          <li class="chk-item">
+            <span class="chk-dot">●</span>
+            <span class="chk-text">Ultimate Tensile Strength: Checking...</span>
+          </li>
+          <li class="chk-item">
+            <span class="chk-dot">●</span>
+            <span class="chk-text">Tensile/Yield Ratio (Rm/Re): Checking...</span>
+          </li>
+          <li class="chk-item">
+            <span class="chk-dot">●</span>
+            <span class="chk-text">Fracture Elongation (A%): Checking...</span>
+          </li>
+        </ul>
+
+        <!-- AI Executive Narrative Script Snippet -->
+        <div class="ai-narrative-snippet" id="aiNarrativeSnippet">
+          Test in progress. Generative AI logic will synthesize an executive compliance narrative once the coupon fracture point is registered.
+        </div>
+      </section>
+    </aside>
+
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

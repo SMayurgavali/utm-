@@ -1,0 +1,41 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "🚀 Run AI-Powered UTM Cloud Hub (run.py)",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/run.py",
+      "args": ["--port", "8000"],
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}"
+      }
+    },
+    {
+      "name": "🧪 Run UTM Automated Test Suite",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/tests/test_engine.py",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}"
+      }
+    },
+    {
+      "name": "📡 Run Read-Only UTM Serial Feed",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/edge/edge_agent.py",
+      "args": ["--serial", "--port", "${env:UTM_SERIAL_PORT}", "--sample-id", "${env:UTM_ACTIVE_SAMPLE_ID}"],
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}",
+        "UTM_DEVICE_TOKEN": "${env:UTM_DEVICE_TOKEN}"
+      }
+    }
+  ]
+}
